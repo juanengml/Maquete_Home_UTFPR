@@ -8,7 +8,7 @@ int led6 = 8;
 int led7 = 7;
 int led8 = 2;
 
-float s_presenca = A0;
+int s_presenca = A0;
 float s_luz = A1;
 
 void setup() {
