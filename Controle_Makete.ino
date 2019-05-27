@@ -1,10 +1,16 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <Ethernet.h>
+#include <Servo.h>
+
+Servo Garagem;  // create servo object to control a servo
+int pos = 0;  // analog pin used to connect the potentiometer
+int val;    // variable to read the value from the analog pin
 
 
 #define TOKEN "dTIeNux208W2uxRzcwme" // ThingsBoard Device Auth Token
 #define ID_DEVICE "8e2ed310-7bf8-11e9-be51-21f72e58f847"
+
 
 #define GPIO14 14
 #define GPIO15 15
@@ -16,16 +22,20 @@
 #define GPIO21 21
 #define GPIO22 22
 
-#define GPIO14_PIN 14
-#define GPIO15_PIN 15
-#define GPIO16_PIN 16
-#define GPIO17_PIN 17
-#define GPIO18_PIN 18
-#define GPIO19_PIN 19
-#define GPIO20_PIN 20
-#define GPIO21_PIN 21
-#define GPIO22_PIN 22
+ 
+#define GPIO14_PIN 1
+#define GPIO15_PIN 2
+#define GPIO16_PIN 3
+#define GPIO17_PIN 4
+#define GPIO18_PIN 5
+#define GPIO19_PIN 6
+#define GPIO20_PIN 7
+#define GPIO21_PIN 8
+#define GPIO22_PIN 9
 
+
+void  printIPAddress();
+void    reconnect();
 
 void on_message(const char* topic, byte* payload, unsigned int length);
 
@@ -40,16 +50,18 @@ PubSubClient client(server, 1883, on_message, ethClient);
 void setup() {
   Serial.begin(9600);
   // Set output mode for all GPIO pins
-pinMode(13,OUTPUT);
-pinMode(GPIO14, OUTPUT);
-pinMode(GPIO15, OUTPUT);
-pinMode(GPIO16, OUTPUT);
-pinMode(GPIO17, OUTPUT);
-pinMode(GPIO18, OUTPUT);
-pinMode(GPIO19, OUTPUT);
-pinMode(GPIO20, OUTPUT);
-pinMode(GPIO21, OUTPUT);
-pinMode(GPIO22, OUTPUT);
+  Garagem.attach(22);  // attaches the servo on pin 9 to the servo object
+
+  pinMode(13,OUTPUT);
+  pinMode(GPIO14, OUTPUT);
+  pinMode(GPIO15, OUTPUT);
+  pinMode(GPIO16, OUTPUT);
+  pinMode(GPIO17, OUTPUT);
+  pinMode(GPIO18, OUTPUT);
+  pinMode(GPIO19, OUTPUT);
+  pinMode(GPIO20, OUTPUT);
+  pinMode(GPIO21, OUTPUT);
+  pinMode(GPIO22, OUTPUT);
 
   delay(10);
 
@@ -103,10 +115,12 @@ void on_message(const char* topic, byte* payload, unsigned int length) {
 
   if (methodName.equals("getGpioStatus")) {
     // Reply with GPIO status
-    //String responseTopic = String(topic);
-    //responseTopic.replace("request", "response");
-    //client.publish(responseTopic.c_str(), get_gpio_status().c_str());
-  } else if (methodName.equals("setGpioStatus")) {
+    String responseTopic = String(topic);
+    responseTopic.replace("request", "response");
+    client.publish(responseTopic.c_str(), get_gpio_status().c_str());
+    client.publish("v1/devices/me/attributes", get_gpio_status().c_str());
+
+} else if (methodName.equals("setGpioStatus")) {
     // Update GPIO status and reply
     set_gpio_status(data["params"]["pin"], data["params"]["enabled"]);
     String responseTopic = String(topic);
@@ -138,7 +152,7 @@ String get_gpio_status() {
 }
 
 void set_gpio_status(int pin, boolean enabled) {
-  switch(pin):
+  switch(pin){
   case GPIO14_PIN:
     digitalWrite(GPIO14, enabled ? HIGH : LOW);
     gpioState[0] = enabled;
@@ -177,11 +191,14 @@ void set_gpio_status(int pin, boolean enabled) {
     gpioState[7] = enabled;
     break;
 
-  case GPIO22_PIN:
-    digitalWrite(GPIO22, enabled ? HIGH : LOW);
-    gpioState[8] = enabled;
+  case GPIO22_PIN:  // garagem
+    //digitalWrite(GPIO22, enabled ? HIGH : LOW);
+    bool value;
+    value = enabled ? HIGH : LOW;
+    StatusGaregem(value);
+    gpioState[8] = value;
     break;
-
+  
    }
 
 }
@@ -241,4 +258,21 @@ void printIPAddress()
   Pisca();
   Pisca();
   Serial.println();
+}
+
+
+void StatusGaregem(bool option){
+  if (option == HIGH){
+      for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degree
+        Garagem.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(15);                       // waits 15ms for the servo to reach the position
+    }
+  }else{
+      for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+        Garagem.write(pos);              // tell servo to go to position in variable 'pos'
+        delay(15);                       // waits 15ms for the servo to reach the position
+      }
+    
+  }
+  
 }
