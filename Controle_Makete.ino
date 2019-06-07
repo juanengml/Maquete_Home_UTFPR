@@ -8,8 +8,8 @@ int pos = 0;  // analog pin used to connect the potentiometer
 int val;    // variable to read the value from the analog pin
 
 
-#define TOKEN "dTIeNux208W2uxRzcwme" // ThingsBoard Device Auth Token
-#define ID_DEVICE "8e2ed310-7bf8-11e9-be51-21f72e58f847"
+#define TOKEN "   TOKEN " // ThingsBoard Device Auth Token
+#define ID_DEVICE " id "
 
 
 #define GPIO14 14
