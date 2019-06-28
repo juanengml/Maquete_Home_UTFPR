@@ -3,14 +3,13 @@
 #include <Ethernet.h>
 #include <Servo.h>
 
-Servo Garagem;  // create servo object to control a servo
-int pos = 0;  // analog pin used to connect the potentiometer
-int val;    // variable to read the value from the analog pin
+Servo Garagem; 
 
 
-#define TOKEN "   TOKEN " // ThingsBoard Device Auth Token
-#define ID_DEVICE " id "
+#define TOKEN "dTIeNux208W2uxRzcwme" // ThingsBoard Device Auth Token
+#define ID_DEVICE "8e2ed310-7bf8-11e9-be51-21f72e58f847"
 
+// PINOS DO ARDUINO 
 
 #define GPIO14 14
 #define GPIO15 15
@@ -22,7 +21,8 @@ int val;    // variable to read the value from the analog pin
 #define GPIO21 21
 #define GPIO22 22
 
- 
+ // PINOS DA THINGSBOARD 
+
 #define GPIO14_PIN 1
 #define GPIO15_PIN 2
 #define GPIO16_PIN 3
@@ -33,25 +33,35 @@ int val;    // variable to read the value from the analog pin
 #define GPIO21_PIN 8
 #define GPIO22_PIN 9
 
+long ultimo_valor = 0;
 
 void  printIPAddress();
 void    reconnect();
-
+void Pega_Envia_Sensores();
 void on_message(const char* topic, byte* payload, unsigned int length);
 
-// Update these with values suitable for your network.
+// configurações de servidor e mac E
 byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
 IPAddress server(200, 134, 31, 225);
+
+// IMPORTANTE: para cada led um novo deve ser adicionado, caso queira addicionar novos leds 
+
 boolean gpioState[] = {false, false,false,false,false,false,false,false,false};
 EthernetClient ethClient;
 PubSubClient client(server, 1883, on_message, ethClient);
 
+// setup 
 
 void setup() {
   Serial.begin(9600);
-  // Set output mode for all GPIO pins
-  Garagem.attach(22);  // attaches the servo on pin 9 to the servo object
+  Garagem.attach(7); 
+  Garagem.write(0);
+  pinMode(A0,INPUT);
+  pinMode(A1,INPUT);
+  pinMode(8,OUTPUT);    // banheiro suite
+  pinMode(9,OUTPUT);    // corredor
 
+  
   pinMode(13,OUTPUT);
   pinMode(GPIO14, OUTPUT);
   pinMode(GPIO15, OUTPUT);
@@ -78,15 +88,28 @@ void setup() {
   client.setCallback(on_message);
 }
 
+// LOOP 
+
 void loop() {
   if ( !client.connected() ) {
     reconnect();
   }
+  long atual = millis();
+  if (millis() - ultimo_valor  > 5000) { 
+    Pega_Envia_Sensores();
+    ultimo_valor = millis();
+  }
+
+  digitalWrite(9,digitalRead(A0) ? HIGH:LOW);
+  digitalWrite(8,digitalRead(A1) ? HIGH:LOW);
+  
 
   client.loop();
 }
 
-// The callback for when a PUBLISH message is received from the server.
+/*
+  recebe mensagens e trata para controle nas portas do arduino
+*/
 void on_message(const char* topic, byte* payload, unsigned int length) {
 
   Serial.println("On message");
@@ -130,6 +153,10 @@ void on_message(const char* topic, byte* payload, unsigned int length) {
   }
 }
 
+
+/*
+  Atualiza data string para valores dos pinos 
+*/
 String get_gpio_status() {
   // Prepare gpios JSON payload string
   StaticJsonBuffer<200> jsonBuffer;
@@ -150,6 +177,15 @@ String get_gpio_status() {
   Serial.println(strPayload);
   return strPayload;
 }
+
+
+/*
+faz controle de leds e servo motor
+ GPIO0_PIN = pino na thingsboard 
+ GPIOO = pino no arduinp
+ boolean = valor boleano
+ 
+*/ 
 
 void set_gpio_status(int pin, boolean enabled) {
   switch(pin){
@@ -192,18 +228,17 @@ void set_gpio_status(int pin, boolean enabled) {
     break;
 
   case GPIO22_PIN:  // garagem
-    //digitalWrite(GPIO22, enabled ? HIGH : LOW);
-    bool value;
-    value = enabled ? HIGH : LOW;
-    StatusGaregem(value);
-    gpioState[8] = value;
+    Garagem.write(enabled ? 100 : 15 ); 
+    gpioState[8] = enabled ? HIGH : LOW;;
     break;
   
    }
 
 }
 
-
+/* 
+  Função: Default para reconectar
+*/
 
 void reconnect() {
   // Loop until we're reconnected
@@ -246,6 +281,10 @@ void Pisca(){
   delay(500);
 }
 
+/*
+   Mostra Endereço IP na porta Serial Monitor
+*/
+
 void printIPAddress()
 {
   Serial.print("My IP address: ");
@@ -261,18 +300,51 @@ void printIPAddress()
 }
 
 
-void StatusGaregem(bool option){
-  if (option == HIGH){
-      for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degree
-        Garagem.write(pos);              // tell servo to go to position in variable 'pos'
-        delay(15);                       // waits 15ms for the servo to reach the position
-    }
-  }else{
-      for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-        Garagem.write(pos);              // tell servo to go to position in variable 'pos'
-        delay(15);                       // waits 15ms for the servo to reach the position
-      }
-    
+/**
+    sensore de LDR e movimento  
+    pega os dados e envia pra 
+    thingsboard
+**/ 
+
+
+void Pega_Envia_Sensores()
+{
+  Serial.println("Collecting SENSORS data.");
+
+
+  float h = analogRead(A0);;
+  float t = analogRead(A1);
+
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from sensor!");
+    return;
   }
+
+  Serial.print("light: ");
+  Serial.print(h);
+  Serial.print(" \t");
+  Serial.print("motion: ");
+  Serial.print(t);
+  Serial.print(" ");
+
+  String movimento = String(t);
+  String luminosidade = String(h);
   
+  Serial.print( "Sending movimento and luminosidade : [" );
+  Serial.print( movimento ); Serial.print( "," );
+  Serial.print( luminosidade );
+  Serial.print( "]   -> " );
+
+  String payload = "{";
+  payload += "\"light\":"; payload += luminosidade; payload += ",";
+  payload += "\"motion\":"; payload += movimento;
+  payload += "}";
+
+  // Send payload
+  char attributes[100];
+  payload.toCharArray( attributes, 100 );
+  client.publish( "v1/devices/me/telemetry", attributes );
+  Serial.println( attributes );
 }
+  
+
