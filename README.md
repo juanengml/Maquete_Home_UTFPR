@@ -25,6 +25,8 @@ Controle e Prototipação da maquete da casa
 - sensor de luz (controle automatico com LDR)
 - sensor de movimento(controle automatico com PIR
 --- 
+### Dashboard 
+![App](images/app.png)
 
 ### Eletronica na protoboard 
 
