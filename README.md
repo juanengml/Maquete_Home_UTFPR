@@ -2,15 +2,17 @@
 Controle e Prototipação da maquete da casa
 
 ## Grupo de Pesquisa de IoT da UTFPR-TD
+
 ### Participantes: 
 - Juan Manoel (Eng Computação) 
-- Debora Rodrigues (Eng Eletronica) 
+- Debora Rodrigues (Eng Eletronica)
+
 ## Problematica: 
 * Altos indices de uso de energia de forma irregular
 * Lampadas acessas em horarios que não deveria
 
 
-## Objetivol
+## Objetivo
 * Monitorar o Ambiente com sensores de luminosidade e presença
 * Controlar Ambientes de forma remota EX:(Lampadas)
 * Controlar Garagem 
