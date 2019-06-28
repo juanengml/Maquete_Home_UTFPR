@@ -24,10 +24,18 @@ Controle e Prototipação da maquete da casa
 -  Lampandas (leds pela maquete)
 - sensor de luz (controle automatico com LDR)
 - sensor de movimento(controle automatico com PIR
+--- 
+
+### Eletronica na protoboard 
+
+![2](images/2.jpeg)
 
 ## DashBoard de Monitoramento de Status de janela
 
-![Banana](dashboard.png)
+![Banana](images/dashboard.png)
 
 
 ## Maquete Pronta !
+![1](images/1.jpeg)
+![3](images/3.jpeg)
+![4](images/4.jpeg)
