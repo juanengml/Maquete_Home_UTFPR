@@ -1,7 +1,6 @@
 # Maquete_Home_UTFPR
 Controle e Prototipação da maquete da casa
 
-# Sistema de Monitoramento de Sala
 ## Grupo de Pesquisa de IoT da UTFPR-TD
 ### Participantes: 
 - Juan Manoel (Eng Computação) 
